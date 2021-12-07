@@ -1,30 +1,40 @@
 ---
-title: "DS325_Project-3"
+title: "DS325 Project 3: Recidivism"
 author: "Johnny Carstens & Matthew Bushnell"
 date: "12/2/2021"
-output: html_document
+output:
+  html_document:
+    theme: spacelab
+    highlight: haddock
+    toc: true
+    toc_float: true
+    number_sections: false
+    code_folding: hide
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+## Introduction
+
+
+## Task 1: Visualize the Data
+
+```{r trapAnthem}
+library(tidyverse)
+library(olsrr)
+library(ggfortify)
+library(GGally)
+library(mdsr)
+
+ggplot(pairs, aes(x=RiskRecidDecileScore, fill = as.factor(isRecid))) + geom_bar(position = "dodge") + 
+  labs(x = "RiskRecidDecileScore", y = "Count", title = "Figure 1: RiskRecidDecileScore vs isRecid")
+```
+Figure 1 is a bar graph that counts how many people either did or did not recidivate (Red means they did not recidivate) for each score of the COMPAS test. This plot shows a clear correlation that people with a low score did not recidivate. There isn't a very clear relation for people who did recidivate with respect to people that did recidivate. The plot shows that RiskRecidDecileScore is a good indicator of prediciting if a person will not recidivate, so we will include this in our model. 
+
+```{r jPop}
+ggplot(pairs, aes(x=priorsCount, y = isRecid, color = race, alpha = 0.1)) + geom_point() + geom_jitter(aes(height = 0.5)) 
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r I cant remember if we wanted to include this one}
+ggplot(pairs, aes(x=sex, fill = as.factor(isRecid))) + geom_bar(position = "dodge") + 
+  labs(x = "Sex", y = "Count", title = "Figure 3: isRecid vs Sex")
 ```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
