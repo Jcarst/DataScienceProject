@@ -5,43 +5,6 @@ library(ggfortify)
 library(mdsr)
 
 
-
-data <- read.csv("Project3Sample4000.csv")
-
-############### Matt's code
-data <- data %>% select(!c(name, dob, c_jail_in, c_jail_out, RiskRecidScreeningDate, c_charge_desc))
-
-modelAll <- glm(isRecid~.,data,family="binomial")
-summary(modelAll)
-
-# Plots
-ggplot(data,aes(x=log(age),fill=as.factor(isRecid),alpha=.5)) + geom_density()
-
-model <- glm(isRecid~.-c_charge_degree
-             -RiskViolenceScoreLevel
-             -ageCat
-             -RiskRecidScoreLevel
-             -RiskViolenceDecileScore
-             -juvMisdemeanerCount
-             -juvOtherCount
-             -c_days_from_compas
-             -race
-             -juvFelonyCount
-             -days_b_screening_arrest,data,family="binomial")
-summary(model)
-
-dataReduced <- data %>% select(sex,age,priorsCount,RiskRecidDecileScore,isRecid)
-
-dataReduced$age <- log(dataReduced$age)
-model2 <- glm(isRecid~.,dataReduced,family="binomial")
-
-summary(model2)
-
-ggplot(data=data,aes(x=sex, fill=as.factor(isRecid))) + 
-  geom_bar(position="dodge") +
-  labs(fill="Reoffended",x="Gender",y="Count")
-
-
 data <- read.csv("Project3Sample4000.csv")
 
 pairs <- data %>% select(!c(name,dob, c_jail_in, c_jail_out, RiskRecidScreeningDate,c_charge_desc))
@@ -54,11 +17,11 @@ ggpairs(pairs)
 recidModel <- glm(isRecid ~., pairs, family = "binomial")
 model <- glm(isRecid ~.-ageCat, pairs, family = "binomial")
 
-ggplot(pairs, aes(x=race, fill=as.factor(isRecid), color = race, alpha = 0.5)) +  geom_density(aes(color = race))
 
-ggplot(pairs, aes(x=sex, fill = as.factor(isRecid), color = sex, alpha = 0.2)) + geom_density()
 
-ggplot(pairs, aes(x=priorsCount, y = isRecid, color = race)) + geom_point() + geom_jitter()
+ggplot(pairs, aes(x=sex, y = isRecid, color = sex, alpha = 0.2)) + geom_density()
+
+ggplot(pairs, aes(x=priorsCount, fill = as.factor(isRecid), alpha = 0.1)) + geom_density()
 
 priorsModel <- glm(isRecid ~ priorsCount, pairs, family = "binomial")
 summary(priorsModel)
@@ -66,7 +29,52 @@ summary(priorsModel)
 pairs$RiskRecidDecileScore <- log(pairs$RiskRecidDecileScore)
 ggpairs(pairs)
 
+regressionModel <- glm(isRecid ~ sex + priorsCount + age, pairs, family = "binomial")
+summary(regressionModel)
+
+ageModel <- glm(isRecid ~ log(age), pairs, family = "binomial")
+summary(ageModel)
 
 
-############# references
-# https://rpubs.com/sweeneys/STATS504-COMPAS       
+### Multiple Regression ### 
+
+mrData <- pairs %>% 
+  select(!c(RiskViolenceScoreLevel, isRecid, ageCat, RiskRecidScoreLevel, RiskViolenceDecileScore, RiskViolenceScoreLevel, c_days_from_compas, days_b_screening_arrest)) %>% 
+  mutate(logAge = log10(age))
+
+RiskRecidDecileModel <- lm(RiskRecidDecileScore ~., mrData)
+
+forwardSelect <- ols_step_forward_p(RiskRecidDecileModel)
+forwardSelect
+
+backwardsSelect <- ols_step_backward_p(RiskRecidDecileModel)
+backwardsSelect
+
+bestSubset <- ols_step_best_subset(RiskRecidDecileModel)
+bestSubset # Pick 8 
+
+mixedSelection <- ols_step_both_p(RiskRecidDecileModel)
+mixedSelection
+
+bestModel <- lm(RiskRecidDecileScore ~ age + race + juvFelonyCount + juvOtherCount + priorsCount, mrData)
+summary(bestModel)
+trial <- ols_step_best_subset(bestModel)
+
+### Riskof Violence Decile Score ### 
+
+pleaseGodHelp <- pairs %>% 
+  select(!c(RiskViolenceScoreLevel, isRecid, ageCat, RiskRecidScoreLevel, RiskRecidDecileScore, RiskViolenceScoreLevel, c_days_from_compas, days_b_screening_arrest))
+
+byron <- lm(RiskViolenceDecileScore ~ ., pleaseGodHelp)
+
+chocolateChipIceCream <- ols_step_forward_p(byron)
+chocolateChipIceCream
+
+anime <- ols_step_backward_p(byron)
+anime 
+
+naruto <- ols_step_best_subset(byron)
+naruto
+
+initialD <- ols_step_both_p(byron) # Choose this one 
+initialD
