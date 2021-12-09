@@ -4,6 +4,8 @@ library(GGally)
 library(ggfortify)
 library(mdsr)
 
+
+
 data <- read.csv("Project3Sample4000.csv")
 
 ############### Matt's code
@@ -40,8 +42,8 @@ ggplot(data=data,aes(x=sex, fill=as.factor(isRecid))) +
   labs(fill="Reoffended",x="Gender",y="Count")
 
 
+data <- read.csv("Project3Sample4000.csv")
 
-############ Johnny's Code
 pairs <- data %>% select(!c(name,dob, c_jail_in, c_jail_out, RiskRecidScreeningDate,c_charge_desc))
 
 data$ageCat <- as.factor(data$ageCat)

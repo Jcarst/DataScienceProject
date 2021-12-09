@@ -1,5 +1,5 @@
 ---
-title: "DS325_Project-3"
+title: "DS325 Project 3: Recidivism"
 author: "Johnny Carstens & Matthew Bushnell"
 date: "12/2/2021"
 output: 
@@ -54,3 +54,25 @@ ggplot(data=data,aes(x=c_charge_degree,fill=as.factor(isRecid))) +
   labs(title="Charge Degree and Reoffended",x="Charge Degree",y="Count",fill="Reoffended")
 ```
 
+
+```{r trapAnthem}
+library(tidyverse)
+library(olsrr)
+library(ggfortify)
+library(GGally)
+library(mdsr)
+
+ggplot(pairs, aes(x=RiskRecidDecileScore, fill = as.factor(isRecid))) + geom_bar(position = "dodge") + 
+  labs(x = "RiskRecidDecileScore", y = "Count", title = "Figure 1: RiskRecidDecileScore vs isRecid")
+```
+Figure 1 is a bar graph that counts how many people either did or did not recidivate (Red means they did not recidivate) for each score of the COMPAS test. This plot shows a clear correlation that people with a low score did not recidivate. There isn't a very clear relation for people who did recidivate with respect to people that did recidivate. The plot shows that RiskRecidDecileScore is a good indicator of prediciting if a person will not recidivate, so we will include this in our model. 
+
+```{r jPop}
+ggplot(pairs, aes(x=priorsCount, y = isRecid, color = race, alpha = 0.1)) + geom_point() + geom_jitter(aes(height = 0.5)) 
+```
+
+
+```{r I cant remember if we wanted to include this one}
+ggplot(pairs, aes(x=sex, fill = as.factor(isRecid))) + geom_bar(position = "dodge") + 
+  labs(x = "Sex", y = "Count", title = "Figure 3: isRecid vs Sex")
+```
