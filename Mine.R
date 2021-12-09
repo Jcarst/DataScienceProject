@@ -15,14 +15,20 @@ data <- Originaldata %>%
   ) %>%
   select(!c(name, dob, inDay, inMonth, inYear, outDay, outMonth, outYear, RiskRecidScreeningDate, c_charge_desc)) %>%
   mutate(
-    totalPriors = priorsCount+juvFelonyCount+juvMisdemeanerCount+juvOtherCount
+    crimeType = str_extract(c_charge_degree,"[MF]")
   ) %>%
-  select(!c(priorsCount,juvFelonyCount,juvMisdemeanerCount,juvOtherCount,ageCat,days_b_screening_arrest,c_days_from_compas,c_charge_degree,race,RiskRecidScoreLevel,RiskViolenceScoreLevel))
+  filter(
+    !is.na(crimeType)
+  ) %>%
+  select(!c(RiskViolenceDecileScore,crimeType,c_charge_degree,race,juvFelonyCount,juvMisdemeanerCount,juvOtherCount,ageCat,days_b_screening_arrest,c_days_from_compas,RiskRecidScoreLevel,RiskViolenceScoreLevel))
 
 
+ggplot(data=data,aes(x=crimeType,fill=as.factor(isRecid)))+
+  geom_bar(position="dodge")
 
 # model with no scores
-modelNS <- glm(data=data,isRecid~.-RiskRecidDecileScore-RiskViolenceDecileScore,family="binomial")
+modelNS <- glm(data=data,isRecid~.-RiskRecidDecileScore+log(priorsCount+.1)-priorsCount,family="binomial")
+summary(modelNS)
 
 
 modelNSPred <- predict.glm(modelNS,newdata=data,type="response")
@@ -44,7 +50,8 @@ table(data$isRecid)[2]/count(data)
 
 
 # Model with scores
-modelWS <- glm(data=data,isRecid~.,family="binomial")
+modelWS <- glm(data=data,isRecid~.+log(priorsCount+.1)-priorsCount,family="binomial")
+summary(modelWS)
 
 modelWSPred <- predict.glm(modelWS,newdata=data,type="response")
 
@@ -60,6 +67,17 @@ WSmatrix <- table(dataWSPred$recidPred,dataWSPred$isRecid)
 WSmatrix
 
 ((WSmatrix[1,2]+WSmatrix[2,1])/count(data))
+
+
+
+
+
+
+#### Multiple regression
+
+
+
+
 
 
 
@@ -114,6 +132,6 @@ ggplot(data=data,aes(x=c_charge_degree,fill=as.factor(isRecid))) +
   geom_bar(position="dodge") +
   labs(title="Charge Degree and Reoffended",x="Charge Degree",y="Count",fill="Reoffended")
 
-ggplot(data=data,aes(x=log(daysInJail+.1),fill=as.factor(isRecid))) +
+ggplot(data=data,aes(x=daysInJail,fill=as.factor(isRecid))) +
   geom_density(alpha=.3)
 

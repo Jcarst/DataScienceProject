@@ -76,3 +76,53 @@ ggplot(pairs, aes(x=priorsCount, y = isRecid, color = race, alpha = 0.1)) + geom
 ggplot(pairs, aes(x=sex, fill = as.factor(isRecid))) + geom_bar(position = "dodge") + 
   labs(x = "Sex", y = "Count", title = "Figure 3: isRecid vs Sex")
 ```
+
+
+
+
+# Task 2: Building Models for Recidivism
+
+```{r}
+# model with no scores
+modelNS <- glm(data=data,isRecid~.-RiskRecidDecileScore+log(priorsCount+.1)-priorsCount,family="binomial")
+summary(modelNS)
+
+
+modelNSPred <- predict.glm(modelNS,newdata=data,type="response")
+
+
+dataWNSPred  <- cbind(data,modelNSPred)
+
+dataWNSPred <- dataWNSPred %>%
+  mutate(
+    recidPred = ifelse(modelNSPred > .5, 1, 0)
+  )
+
+WNSmatrix <- table(dataWNSPred$recidPred,dataWNSPred$isRecid)
+WNSmatrix
+
+((WNSmatrix[1,2]+WNSmatrix[2,1])/count(data))
+
+table(data$isRecid)[2]/count(data)
+
+
+# Model with scores
+modelWS <- glm(data=data,isRecid~.+log(priorsCount+.1)-priorsCount,family="binomial")
+summary(modelWS)
+
+modelWSPred <- predict.glm(modelWS,newdata=data,type="response")
+
+
+dataWSPred  <- cbind(data,modelWSPred)
+
+dataWSPred <- dataWSPred %>%
+  mutate(
+    recidPred = ifelse(modelWSPred > .5, 1, 0)
+  )
+
+WSmatrix <- table(dataWSPred$recidPred,dataWSPred$isRecid)
+WSmatrix
+
+((WSmatrix[1,2]+WSmatrix[2,1])/count(data))
+```
+
