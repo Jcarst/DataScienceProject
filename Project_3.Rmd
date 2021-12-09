@@ -14,8 +14,9 @@ output:
 
 ## Introduction
 
+## Logistic Regression of Recidivism Data
+# Task 1: Visualizing the Data
 
-## Task 1: Visualize the Data
 
 ```{r trapAnthem}
 library(tidyverse)
@@ -24,17 +25,29 @@ library(ggfortify)
 library(GGally)
 library(mdsr)
 
-ggplot(pairs, aes(x=RiskRecidDecileScore, fill = as.factor(isRecid))) + geom_bar(position = "dodge") + 
-  labs(x = "RiskRecidDecileScore", y = "Count", title = "Figure 1: RiskRecidDecileScore vs isRecid")
+ggplot(pairs, aes(x = age, fill = as.factor(isRecid), alpha = 0.1)) + 
+  geom_density() + 
+  labs(x = "Age", y = "isRecid", title = "Figure 1: Age vs isRecid")
 ```
-Figure 1 is a bar graph that counts how many people either did or did not recidivate (Red means they did not recidivate) for each score of the COMPAS test. This plot shows a clear correlation that people with a low score did not recidivate. There isn't a very clear relation for people who did recidivate with respect to people that did recidivate. The plot shows that RiskRecidDecileScore is a good indicator of prediciting if a person will not recidivate, so we will include this in our model. 
+
+Figure 1 is a density plot of Age vs isRecid. isRecid is a binary response variable where 1 is equal to a person who did reoffend, and 0 is equal to someone who hasn't reoffended. Notice that in Figure 1, as age increases the amount of people who reoffended, or didn't reoffend decreases. We can also see that between ages 30 and 35, the amount of people who didn't recidivate becomes greater than those who did recidivate. 
 
 ```{r jPop}
-ggplot(pairs, aes(x=priorsCount, y = isRecid, color = race, alpha = 0.1)) + geom_point() + geom_jitter(aes(height = 0.5)) 
+ggplot(pairs, aes(x=priorsCount, fill=as.factor(isRecid), alpha = 0.1)) + 
+  geom_density() + 
+  labs(x="Number of Prior Convictions", y = "isRecid", title = "Figure 2: isRecid vs Number of Prior Convictions")
 ```
 
+Figure 2 is a density plot of the number of prior convictions who did and did not recidivate. This data is fairly skewed, so we apply the natural log function to the number of prior convictions which brings us to the next plot. 
+
+```{r Dragostea Din Tei}
+ggplot(pairs, aes(x=log(priorsCount), fill=as.factor(isRecid), alpha = 0.1)) + 
+  geom_density() + 
+  labs(x="Number of Prior Convictions", y = "isRecid", title = "Figure 2: isRecid vs Number of Prior Convictions")
+```
 
 ```{r I cant remember if we wanted to include this one}
 ggplot(pairs, aes(x=sex, fill = as.factor(isRecid))) + geom_bar(position = "dodge") + 
   labs(x = "Sex", y = "Count", title = "Figure 3: isRecid vs Sex")
 ```
+
