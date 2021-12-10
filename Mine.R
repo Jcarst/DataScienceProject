@@ -32,6 +32,7 @@ modelNS <- glm(data=modelNSdata,isRecid~.+log(priorsCount+.1)-priorsCount,family
 summary(modelNS)
 
 
+
 modelNSPred <- predict.glm(modelNS,newdata=data,type="response")
 
 
@@ -379,6 +380,6 @@ ggplot(data=data,aes(x=c_charge_degree,fill=as.factor(isRecid))) +
   geom_bar(position="dodge") +
   labs(title="Charge Degree and Reoffended",x="Charge Degree",y="Count",fill="Reoffended")
 
-ggplot(data=data,aes(x=daysInJail,fill=as.factor(isRecid))) +
+ggplot(data=data,aes(x=log(daysInJail+.1),fill=as.factor(isRecid))) +
   geom_density(alpha=.3)
 

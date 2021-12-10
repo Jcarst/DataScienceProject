@@ -17,11 +17,11 @@ knitr::opts_chunk$set(echo = TRUE, eval=TRUE, message=FALSE, warning=FALSE)
 
 
 # Introduction
-Insert Intro Here
+For this project, we are analyzing a criminal justice data set to accurately model and predict recidivism (the likelihood a criminal will reoffend). The data set we are using for these models is from Broward County, Florida and also contains recidivity risk and violence risk scores from a tests that the criminals were given. We will build a model with and a model without those scores to determine how helpful the tests really are in predicting recidivity. 
+
+Not only will we be creating models on our data set to predict recidivity, we will also be exploring the implications and morality of using algorithms in the criminal justice system. 
 
 # Logistic Regression of Recidivism Data
-## Task 1: Visualizing the Data
-
 
 ```{r trapAnthem}
 library(tidyverse)
@@ -52,44 +52,70 @@ data <- Originaldata %>%
   select(!c(RiskViolenceDecileScore,crimeType,c_charge_degree,race,juvFelonyCount,juvMisdemeanerCount,juvOtherCount,ageCat,days_b_screening_arrest,c_days_from_compas,RiskRecidScoreLevel,RiskViolenceScoreLevel))
 
 
-ggplot(pairs, aes(x = age, fill = as.factor(isRecid), alpha = 0.1)) + 
-  geom_density() + 
-  labs(x = "Age", y = "isRecid", title = "Figure 1: Age vs isRecid")
+ggplot(pairs, aes(x = age, fill = as.factor(isRecid))) + 
+  geom_density(alpha=.3) + 
+  labs(x = "Age", y = "Density", title = "Figure 1: Density of Age", fill="Reoffended")
 ```
 
-Figure 1 is a density plot of Age vs isRecid. isRecid is a binary response variable where 1 is equal to a person who did reoffend, and 0 is equal to someone who hasn't reoffended. Notice that in Figure 1, as age increases the amount of people who reoffended, or didn't reoffend decreases. We can also see that between ages 30 and 35, the amount of people who didn't recidivate becomes greater than those who did recidivate. 
+Figure 1 is a density plot of Age vs Reoffenders. Reoffend is a binary response variable where 1 is equal to a person who did reoffend, and 0 is equal to someone who hasn't reoffended. Notice that in Figure 1, as age increases the amount of people who reoffended, or didn't reoffend decreases. We can also see that between ages 30 and 35, the amount of people who didn't recidivate becomes greater than those who did recidivate. It makes sense to see older individuals become less inclined towards reoffending while younger individuals have a greater inclination towards reoffending. Perhaps one of the reasons why older individuals are less inclined to reoffending is because of extensive time spent in incarceration. Age looks like a good variable to use in our model.
 
 ```{r jPop}
-ggplot(pairs, aes(x=priorsCount, fill=as.factor(isRecid), alpha = 0.1)) + 
-  geom_density() + 
-  labs(x="Number of Prior Convictions", y = "isRecid", title = "Figure 2: isRecid vs Number of Prior Convictions")
+ggplot(pairs, aes(x=priorsCount, fill=as.factor(isRecid))) + 
+  geom_density(alpha=.3) + 
+  labs(x="Number of Prior Convictions", y = "Density", title = "Figure 2: Density of Prior Convictions.", fill = "Reoffended")
 ```
 
-Figure 2 is a density plot of the number of prior convictions who did and did not recidivate. This data is fairly skewed, so we apply the natural log function to the number of prior convictions which brings us to the next plot. 
+Figure 2 is a density plot of the number of prior convictions who did and did not recidivate. It is clear that those who have never committed a prior crime are much less likely to reoffend. This data is fairly skewed, so we apply the natural log function to the number of prior convictions which brings us to the next plot. 
 
 ```{r Dragostea Din Tei}
-ggplot(pairs, aes(x=log(priorsCount+0.1), fill=as.factor(isRecid), alpha = 0.1)) + 
-  geom_density() + 
-  labs(x="Number of Prior Convictions", y = "isRecid", title = "Figure 3: isRecid vs Number of Prior Convictions")
+ggplot(pairs, aes(x=log(priorsCount+0.1), fill=as.factor(isRecid))) + 
+  geom_density(alpha=.3) + 
+  labs(x="Logarithm of Prior Convictions", y = "Density", title = "Figure 3: Density of ln(Prior Convictions)", fill = "Reoffended")
 ```
 
-Figure 3 is the same plot as figure 2, except we added 0.1 to the number of prior convictions and then applied a natural logarithm to the data column. We can see that the distribution has been normalized better compared to Figure 2. We shall use this process of using the natural logarithm when building our logistic regression model. 
+Figure 3 is the same plot as figure 2, except we added 0.1 to the number of prior convictions and then applied a natural logarithm to the data column. We can see that the distribution has been normalized better compared to Figure 2. We shall use this process of using the natural logarithm when building our logistic regression model. The peak on the left side of the data represents individuals who had 0 prior convictions while the next bump over the valley represents those who had 1 or more. The reason for the valley in between is because of the nature of logarithms and the fact that we had to add 0.1 to the values of 0 in order to get defined numbers. We can see that individuals who had 1 prior were slightly less likely to reoffend while those with more than 1 greatly increased their recidivity risk.
 
 ```{r I cant remember if we wanted to include this one}
 ggplot(pairs, aes(x=sex, fill = as.factor(isRecid))) + geom_bar(position = "dodge") + 
-  labs(x = "Sex", y = "Count", title = "Figure 4: isRecid vs Sex")
+  labs(x = "Sex", y = "Count", title = "Figure 4: isRecid vs Sex",fill="Reoffended")
 ```
 
-Figure 4 is a bar graph of Sex vs isRecid. Notice that the proportion of non recidivates to recidivates for both sexes are similar. Although, the male category has signigicantly more observations than women. This plot suggests that men are more likley to recidivate than women are. 
+Figure 4 is a bar graph of Sex vs Reoffended. First we note that the male category is much larger. This plot also shows that less than a third of females are likely to reoffend while greater than a third of men are likely to reoffend. This information can be useful to our model.
 
-## Building Logistic Regression Models
-The data set provided contained a variable called RiskRecidDecileScore. This score came from convicts taking a test thaat determined how likley they are to recidivate on a scale of 1-10. We built one model that includes the RiskRecidDecileScore and one model without the score. 
+```{r}
+ggplot(data=data,aes(x=log(daysInJail+.1),fill=as.factor(isRecid))) +
+  geom_density(alpha=.3) +
+  labs(x="Natural Log of Days spent in jail",y="Density",fill="Reoffended",title="Figure 5: Density of days spent in jail")
+```
+
+Figure 5 is a density plot of the logarithm of days spent in jail colored by those who reoffended and those who did not. The reason we used the logarithm for this plot is because it was difficult to visualize otherwise, we will not be using the logarithm for our model because it proved to reduce the accuracy of our model.
+
+
+# Building Logistic Regression Models
+The data set provided contained a variable called RiskRecidDecileScore. This score came from convicts taking a test that determined how likey they are to recidivate on a scale of 1-10. We built one model that includes the RiskRecidDecileScore and one model without the score. 
 The first model we built does not include RiskRecidDecileScore in our prediction variables. 
 
-```{r Metallica}
-modelNS <- glm(data=data,isRecid~.-RiskRecidDecileScore+log(priorsCount+.1)-priorsCount,family="binomial")
+```{r Metallica, results='fold'}
+modelNS <- glm(data=data,isRecid~sex+age+daysInJail+log(priorsCount+.1),family="binomial")
+```
+
+### Model{.tabset}
+#### Simple
+
+|Variable|Value|
+|:-|:-|
+|Intercept|`r modelNS[[1]][1]`|
+|Sex=Male|`r modelNS[[1]][2]`|
+|Age|`r modelNS[[1]][3]`|
+|Days In Jail|`r modelNS[[1]][4]`|
+|Natural Log of Priors|`r modelNS[[1]][5]`|
+
+#### Full Summary
+```{r, results='asis'}
 summary(modelNS)
 ```
+
+### {-}
 
 Above is a summary of the logistic model created to predict whether or not a convict will recidivate. As we can see, all of our previous plots implemented into the model are statistically significant. Now we test this model using a confusion matrix. 
 
