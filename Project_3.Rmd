@@ -11,11 +11,16 @@ output:
     number_sections: false
     code_folding: hide
 ---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=TRUE, message=FALSE, warning=FALSE)
+```
 
-## Introduction
 
-## Logistic Regression of Recidivism Data
-# Task 1: Visualizing the Data
+# Introduction
+Insert Intro Here
+
+# Logistic Regression of Recidivism Data
+## Task 1: Visualizing the Data
 
 
 ```{r trapAnthem}
@@ -24,6 +29,28 @@ library(olsrr)
 library(ggfortify)
 library(GGally)
 library(mdsr)
+data <- read.csv("Project3Sample4000.csv")
+
+pairs <- data %>% select(!c(name,dob, c_jail_in, c_jail_out, RiskRecidScreeningDate,c_charge_desc))
+
+Originaldata <- read.csv("Project3Sample4000.csv")
+
+############### Matt's code
+data <- Originaldata %>%
+  separate(c_jail_in, c("inDay","inMonth","inYear")) %>%
+  separate(c_jail_out,c("outDay","outMonth","outYear")) %>%
+  mutate(
+    daysInJail = ((as.integer(outYear)*365)+(as.integer(outMonth)*30)+(as.integer(outDay)))-((as.integer(inYear)*365)+(as.integer(inMonth)*30)+(as.integer(inDay)))
+  ) %>%
+  select(!c(name, dob, inDay, inMonth, inYear, outDay, outMonth, outYear, RiskRecidScreeningDate, c_charge_desc)) %>%
+  mutate(
+    crimeType = str_extract(c_charge_degree,"[MF]")
+  ) %>%
+  filter(
+    !is.na(crimeType)
+  ) %>%
+  select(!c(RiskViolenceDecileScore,crimeType,c_charge_degree,race,juvFelonyCount,juvMisdemeanerCount,juvOtherCount,ageCat,days_b_screening_arrest,c_days_from_compas,RiskRecidScoreLevel,RiskViolenceScoreLevel))
+
 
 ggplot(pairs, aes(x = age, fill = as.factor(isRecid), alpha = 0.1)) + 
   geom_density() + 
@@ -41,27 +68,32 @@ ggplot(pairs, aes(x=priorsCount, fill=as.factor(isRecid), alpha = 0.1)) +
 Figure 2 is a density plot of the number of prior convictions who did and did not recidivate. This data is fairly skewed, so we apply the natural log function to the number of prior convictions which brings us to the next plot. 
 
 ```{r Dragostea Din Tei}
-ggplot(pairs, aes(x=log(priorsCount), fill=as.factor(isRecid), alpha = 0.1)) + 
+ggplot(pairs, aes(x=log(priorsCount+0.1), fill=as.factor(isRecid), alpha = 0.1)) + 
   geom_density() + 
-  labs(x="Number of Prior Convictions", y = "isRecid", title = "Figure 2: isRecid vs Number of Prior Convictions")
+  labs(x="Number of Prior Convictions", y = "isRecid", title = "Figure 3: isRecid vs Number of Prior Convictions")
 ```
+
+Figure 3 is the same plot as figure 2, except we added 0.1 to the number of prior convictions and then applied a natural logarithm to the data column. We can see that the distribution has been normalized better compared to Figure 2. We shall use this process of using the natural logarithm when building our logistic regression model. 
 
 ```{r I cant remember if we wanted to include this one}
 ggplot(pairs, aes(x=sex, fill = as.factor(isRecid))) + geom_bar(position = "dodge") + 
-  labs(x = "Sex", y = "Count", title = "Figure 3: isRecid vs Sex")
+  labs(x = "Sex", y = "Count", title = "Figure 4: isRecid vs Sex")
 ```
 
+Figure 4 is a bar graph of Sex vs isRecid. Notice that the proportion of non recidivates to recidivates for both sexes are similar. Although, the male category has signigicantly more observations than women. This plot suggests that men are more likley to recidivate than women are. 
 
+## Building Logistic Regression Models
+The data set provided contained a variable called RiskRecidDecileScore. This score came from convicts taking a test thaat determined how likley they are to recidivate on a scale of 1-10. We built one model that includes the RiskRecidDecileScore and one model without the score. 
+The first model we built does not include RiskRecidDecileScore in our prediction variables. 
 
-
-# Task 2: Building Models for Recidivism
-
-```{r}
-# model with no scores
+```{r Metallica}
 modelNS <- glm(data=data,isRecid~.-RiskRecidDecileScore+log(priorsCount+.1)-priorsCount,family="binomial")
 summary(modelNS)
+```
 
+Above is a summary of the logistic model created to predict whether or not a convict will recidivate. As we can see, all of our previous plots implemented into the model are statistically significant. Now we test this model using a confusion matrix. 
 
+```{r matt is being confusing}
 modelNSPred <- predict.glm(modelNS,newdata=data,type="response")
 
 
@@ -75,28 +107,19 @@ dataWNSPred <- dataWNSPred %>%
 WNSmatrix <- table(dataWNSPred$recidPred,dataWNSPred$isRecid)
 WNSmatrix
 
-((WNSmatrix[1,2]+WNSmatrix[2,1])/count(data))
-
-table(data$isRecid)[2]/count(data)
-
-
-# Model with scores
-modelWS <- glm(data=data,isRecid~.+log(priorsCount+.1)-priorsCount,family="binomial")
-summary(modelWS)
-
-modelWSPred <- predict.glm(modelWS,newdata=data,type="response")
-
-
-dataWSPred  <- cbind(data,modelWSPred)
-
-dataWSPred <- dataWSPred %>%
-  mutate(
-    recidPred = ifelse(modelWSPred > .5, 1, 0)
-  )
-
-WSmatrix <- table(dataWSPred$recidPred,dataWSPred$isRecid)
-WSmatrix
-
-((WSmatrix[1,2]+WSmatrix[2,1])/count(data))
 ```
+
+The output above shows our confusion matrix for our logistic model. The first row is the actual number of convicts who didn't recidivate who were predicted to either recidivate or not recidivate. For example, the top left of the matrix is the number of actual convicts who did not recidivate who were predicted to not recidivate, and the top right is the number of convicts who didn't recidivate who were predicted to recidivate. The bottom row is similar except its the number of people who did recidvate and the number of convicts who were predicited to either not recidivate or predicited to recidivate. From this matrix we can calculate our error rate. Error rate is defined as the number of people who didn't recidivate who were predicted to recidivate plus the number of people who did recidivate who were predicted to not recidivate dived by the total number of observations. The mathematical definition is 
+$$ 
+\textrm{Error Rate} = \frac{CF_{12} + CF_{21}}{n},\textrm{ where i = row, j = column, and n = number of observations.}
+$$ 
+
+Using our Error Rate formula and plugging in values from our confusion matrix gives us 
+$$
+\textrm{Error Rate} = 0.2958979	
+$$
+Our error rate is the percentage of data points that our model got wrong. 
+
+# Task 2: Building Models for Recidivism
+
 
