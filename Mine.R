@@ -28,7 +28,7 @@ ggplot(data=data,aes(x=crimeType,fill=as.factor(isRecid)))+
 
 # model with no scores
 modelNSdata <- data %>% select(!RiskRecidDecileScore)
-modelNS <- glm(data=modelNSdata,isRecid~.+log(priorsCount+.1)-priorsCount,family="binomial")
+modelNS <- glm(data=modelNSdata,isRecid~sex+age+daysInJail+log(priorsCount+.1),family="binomial")
 summary(modelNS)
 
 
@@ -52,7 +52,7 @@ table(data$isRecid)[2]/count(data)
 
 
 # Model with scores
-modelWS <- glm(data=data,isRecid~.+log(priorsCount+.1)-priorsCount,family="binomial")
+modelWS <- glm(data=data,isRecid~+sex+age+RiskRecidDecileScore+daysInJail+log(priorsCount+.1),family="binomial")
 summary(modelWS)
 
 modelWSPred <- predict.glm(modelWS,newdata=data,type="response")
