@@ -77,4 +77,7 @@ naruto <- ols_step_best_subset(byron)
 naruto
 
 initialD <- ols_step_both_p(byron) # Choose this one 
+
+initialDModel <- lm(data=)
+
 initialD
