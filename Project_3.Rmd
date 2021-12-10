@@ -186,3 +186,191 @@ Johnny explain here because I can't
 # Multiple Regression Models
 
 In this section we are trying to predict the scores for recidivism. 
+
+# Classification models for two subpopulations.
+
+Looking at our data from Broward County we can see that there is a much larger amount of males when compared to females. Let us make a classification model for each gender and see how they compare to each other.
+
+```{r}
+males <- read.csv("Project3Males1500.csv")
+females <- read.csv("Project3Females1500.csv")
+
+fdf <- females %>%
+  separate(c_jail_in, c("inDay","inMonth","inYear")) %>%
+  separate(c_jail_out,c("outDay","outMonth","outYear")) %>%
+  mutate(
+    daysInJail = ((as.integer(outYear)*365)+(as.integer(outMonth)*30)+(as.integer(outDay)))-((as.integer(inYear)*365)+(as.integer(inMonth)*30)+(as.integer(inDay)))
+  ) %>%
+  select(!c(name, dob, inDay, inMonth, inYear, outDay, outMonth, outYear, RiskRecidScreeningDate, c_charge_desc)) %>%
+  mutate(
+    crimeType = str_extract(c_charge_degree,"[MF]")
+  ) %>%
+  filter(
+    !is.na(crimeType)
+  ) %>%
+  select(!c(daysInJail,juvMisdemeanerCount,juvFelonyCount,juvOtherCount,c_charge_degree,race,sex,RiskViolenceDecileScore,crimeType,ageCat,days_b_screening_arrest,c_days_from_compas,RiskRecidScoreLevel,RiskViolenceScoreLevel))
+
+mdf <- males %>%
+  separate(c_jail_in, c("inDay","inMonth","inYear")) %>%
+  separate(c_jail_out,c("outDay","outMonth","outYear")) %>%
+  mutate(
+    daysInJail = ((as.integer(outYear)*365)+(as.integer(outMonth)*30)+(as.integer(outDay)))-((as.integer(inYear)*365)+(as.integer(inMonth)*30)+(as.integer(inDay)))
+  ) %>%
+  select(!c(name, dob, inDay, inMonth, inYear, outDay, outMonth, outYear, RiskRecidScreeningDate, c_charge_desc)) %>%
+  mutate(
+    crimeType = str_extract(c_charge_degree,"[MF]")
+  ) %>%
+  filter(
+    !is.na(crimeType)
+  ) %>%
+  select(!c(juvMisdemeanerCount,juvFelonyCount,juvOtherCount,c_charge_degree,race,sex,RiskViolenceDecileScore,crimeType,ageCat,days_b_screening_arrest,c_days_from_compas,RiskRecidScoreLevel,RiskViolenceScoreLevel))
+
+fmodel <- glm(data=fdf,isRecid~.,family="binomial")
+
+mmodel <- glm(data=mdf,isRecid~.,family="binomial")
+```
+
+### Model for females {.tabset}
+
+#### Simple
+|Variable|Value|
+|:-|:-|
+|Intercept|`r fmodel[[1]][1]`|
+|Age|`r fmodel[[1]][2]`|
+|Priors|`r fmodel[[1]][3]`|
+|Risk Recid Score|`r fmodel[[1]][4]`|
+
+#### Full Summary
+```{r}
+summary(fmodel)
+```
+
+#### Error
+```{r}
+fmodelPred <- predict.glm(fmodel,newdata=fdf,type="response")
+
+
+fDataPred  <- cbind(fdf,fmodelPred)
+
+fDataPred <- fDataPred %>%
+  mutate(
+    recidPred = ifelse(fmodelPred > .5, 1, 0)
+  )
+
+fmatrix <- table(fDataPred$recidPred,fDataPred$isRecid)
+```
+
+|||||
+|-|-|-|-|
+|||Predicted|Predicted|
+|||Didn't Reoffend|Reoffended|
+|Actual|Didn't Reoffend|`r fmatrix[1]`|`r fmatrix[3]`|
+|Actual|Reoffended|`r fmatrix[2]`|`r fmatrix[4]`|
+
+Error rate: &emsp; `r ((fmatrix[1,2]+fmatrix[2,1])/count(fdf))`
+
+Null hypothesis error: &emsp; `r (table(fdf$isRecid)[2]/count(fdf))`
+
+#### Equation
+WIP
+
+### {-}
+
+
+### Model for males {.tabset}
+
+#### Simple
+|Variable|Value|
+|:-|:-|
+|Intercept|`r mmodel[[1]][1]`|
+|Age|`r mmodel[[1]][2]`|
+|Priors|`r mmodel[[1]][3]`|
+|Risk Recid Score|`r mmodel[[1]][4]`|
+|Days in Jail|`r mmodel[[1]][4]`|
+
+#### Full Summary
+```{r}
+summary(mmodel)
+```
+
+#### Error
+```{r}
+mmodelPred <- predict.glm(mmodel,newdata=mdf,type="response")
+
+
+mDataPred  <- cbind(mdf,mmodelPred)
+
+mDataPred <- mDataPred %>%
+  mutate(
+    recidPred = ifelse(mmodelPred > .5, 1, 0)
+  )
+
+mmatrix <- table(mDataPred$recidPred,mDataPred$isRecid)
+```
+
+|||||
+|-|-|-|-|
+|||Predicted|Predicted|
+|||Didn't Reoffend|Reoffended|
+|Actual|Didn't Reoffend|`r mmatrix[1]`|`r mmatrix[3]`|
+|Actual|Reoffended|`r mmatrix[2]`|`r mmatrix[4]`|
+
+Error rate: &emsp; `r ((mmatrix[1,2]+mmatrix[2,1])/count(mdf))`
+
+Null hypothesis error: &emsp; `r (table(mdf$isRecid)[2]/count(mdf))`
+
+#### Equation
+WIP
+
+### {-}
+
+
+
+As we can see from the two summaries, there was more variables that had a significant effect on the recidivism for males than for females. This may be because of the smaller population of females making it harder to predict and see trends in the data. Overall we can see that our prediction for males is much more accurate than our prediction for females. This may be due to several factors, but the lack of female data in comparison to male data is most likely the leading contributer of this descrepency.
+
+# Another story about criminal justice
+
+In our data set we were given date of birth for each individual. We wondered if there was anything to astrology, so we engineered a column for the birth signs for each criminal. Below are some plots we made with this data.
+
+```{r}
+library(arules)
+
+
+extraData <- Originaldata %>%
+  separate(c_jail_in, c("inDay","inMonth","inYear")) %>%
+  separate(c_jail_out,c("outDay","outMonth","outYear")) %>%
+  mutate(
+    daysInJail = ((as.integer(outYear)*365)+(as.integer(outMonth)*30)+(as.integer(outDay)))-((as.integer(inYear)*365)+(as.integer(inMonth)*30)+(as.integer(inDay)))
+  ) %>%
+  select(!c(name, inDay, inMonth, inYear, outDay, outMonth, outYear, RiskRecidScreeningDate, c_charge_desc)) %>%
+  mutate(
+    crimeType = str_extract(c_charge_degree,"[MF]")
+  ) %>%
+  filter(
+    !is.na(crimeType)
+  ) %>%
+  separate(dob, c("birthDay","birthMonth")) %>%
+  mutate(
+    birthMonth = as.integer(str_remove(birthMonth,"^0+")),
+    birthDay = as.integer(birthDay)
+  ) %>%
+  mutate(
+    birthSign = case_when(
+      (birthMonth == 1 & birthDay > 19) | (birthMonth == 2 & birthDay < 19) ~ "Aquarius",
+      (birthMonth == 2 & birthDay > 18) | (birthMonth == 3 & birthDay < 21) ~ "Pisces",
+      (birthMonth == 3 & birthDay > 20) | (birthMonth == 4 & birthDay < 20) ~ "Aries",
+      (birthMonth == 4 & birthDay > 19) | (birthMonth == 5 & birthDay < 21) ~ "Taurus",
+      (birthMonth == 5 & birthDay > 20) | (birthMonth == 6 & birthDay < 21) ~ "Gemini",
+      (birthMonth == 6 & birthDay > 21) | (birthMonth == 7 & birthDay < 23) ~ "Cancer",
+      (birthMonth == 7 & birthDay > 22) | (birthMonth == 8 & birthDay < 23) ~ "Leo",
+      (birthMonth == 8 & birthDay > 22) | (birthMonth == 9 & birthDay < 23) ~ "Virgo",
+      (birthMonth == 9 & birthDay > 22) | (birthMonth == 10 & birthDay < 23) ~ "Libra",
+      (birthMonth == 10 & birthDay > 22) | (birthMonth == 11 & birthDay < 22) ~ "Scorpius",
+      (birthMonth == 11 & birthDay > 21) | (birthMonth == 12 & birthDay < 22) ~ "Sagittarius",
+      (birthMonth == 12 & birthDay > 21) | (birthMonth == 1 & birthDay < 20) ~ "Capricorn"
+    )) %>%
+  select(!c(birthDay, birthMonth, crimeType,c_charge_degree,ageCat,days_b_screening_arrest,c_days_from_compas,RiskRecidScoreLevel,RiskViolenceScoreLevel)) %>%
+  filter(!is.na(birthSign))
+```
+
+We will also be exploring race in the Broward County data set. We are wondering how much race effects the risk recidiviation score and how the imbalance of race in the database could make a model biased.

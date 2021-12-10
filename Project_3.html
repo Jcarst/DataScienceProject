@@ -411,8 +411,8 @@ div.tocify {
 <p>The data set provided contained a variable called RiskRecidDecileScore. This score came from convicts taking a test that determined how likey they are to recidivate on a scale of 1-10. We built one model that includes the RiskRecidDecileScore and one model without the score. The first model we built does not include RiskRecidDecileScore in our prediction variables.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>modelNSdata <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">!</span>RiskRecidDecileScore)</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>modelNS <span class="ot">&lt;-</span> <span class="fu">glm</span>(<span class="at">data=</span>modelNSdata,isRecid<span class="sc">~</span>sex<span class="sc">+</span>age<span class="sc">+</span>daysInJail<span class="sc">+</span><span class="fu">log</span>(priorsCount<span class="fl">+.1</span>),<span class="at">family=</span><span class="st">&quot;binomial&quot;</span>)</span></code></pre></div>
-<div id="model" class="section level3 tabset">
-<h3 class="tabset">Model</h3>
+<div id="model-with-no-scores" class="section level3 tabset">
+<h3 class="tabset">Model with no scores</h3>
 <div id="simple" class="section level4">
 <h4>Simple</h4>
 <table>
@@ -481,7 +481,7 @@ div.tocify {
 <div id="section" class="section level3 unnumbered">
 <h3 class="unnumbered"></h3>
 <p>Above is a summary of the logistic model created to predict whether or not a convict will recidivate. If we check the full summery tab we can see that all of our variables are statistically significant.</p>
-<p>JOHNNY NEEDS TO WRITE SOME STUFF HERE!!!!!!!!!!!!!!!!!</p>
+<p>Johnny explain here because I can’t</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>modelNSPred <span class="ot">&lt;-</span> <span class="fu">predict.glm</span>(modelNS,<span class="at">newdata=</span>data,<span class="at">type=</span><span class="st">&quot;response&quot;</span>)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -530,8 +530,8 @@ div.tocify {
 <p>Now we will build a model using the recidivism scores that we were given with the data set. This will help determine if the scores are effective or not.</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>modelWS <span class="ot">&lt;-</span> <span class="fu">glm</span>(<span class="at">data=</span>data,isRecid<span class="sc">~+</span>sex<span class="sc">+</span>age<span class="sc">+</span>RiskRecidDecileScore<span class="sc">+</span>daysInJail<span class="sc">+</span><span class="fu">log</span>(priorsCount<span class="fl">+.1</span>),<span class="at">family=</span><span class="st">&quot;binomial&quot;</span>)</span></code></pre></div>
 </div>
-<div id="model-1" class="section level3 tabset">
-<h3 class="tabset">Model</h3>
+<div id="model-with-scores" class="section level3 tabset">
+<h3 class="tabset">Model with scores</h3>
 <div id="simple-1" class="section level4">
 <h4>Simple</h4>
 <table>
@@ -555,12 +555,16 @@ div.tocify {
 <td align="left">-0.0202713</td>
 </tr>
 <tr class="even">
-<td align="left">Days In Jail</td>
+<td align="left">Risk Recid Decile Score</td>
 <td align="left">0.16366</td>
 </tr>
 <tr class="odd">
-<td align="left">Natural Log of Priors</td>
+<td align="left">Days In Jail</td>
 <td align="left">-0.0040754</td>
+</tr>
+<tr class="even">
+<td align="left">Natural Log of Priors</td>
+<td align="left">0.2606601</td>
 </tr>
 </tbody>
 </table>
@@ -601,11 +605,281 @@ div.tocify {
 <div id="section-1" class="section level3 unnumbered">
 <h3 class="unnumbered"></h3>
 <p>Above is a summary of the logistic model created to predict whether or not a convict will recidivate. If we check the full summery tab we can see that all of our variables are statistically significant.</p>
+<p>Johnny explain here because I can’t</p>
 </div>
 </div>
 <div id="multiple-regression-models" class="section level1">
 <h1>Multiple Regression Models</h1>
 <p>In this section we are trying to predict the scores for recidivism.</p>
+</div>
+<div id="classification-models-for-two-subpopulations." class="section level1">
+<h1>Classification models for two subpopulations.</h1>
+<p>Looking at our data from Broward County we can see that there is a much larger amount of males when compared to females. Let us make a classification model for each gender and see how they compare to each other.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>males <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;Project3Males1500.csv&quot;</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>females <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;Project3Females1500.csv&quot;</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>fdf <span class="ot">&lt;-</span> females <span class="sc">%&gt;%</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate</span>(c_jail_in, <span class="fu">c</span>(<span class="st">&quot;inDay&quot;</span>,<span class="st">&quot;inMonth&quot;</span>,<span class="st">&quot;inYear&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate</span>(c_jail_out,<span class="fu">c</span>(<span class="st">&quot;outDay&quot;</span>,<span class="st">&quot;outMonth&quot;</span>,<span class="st">&quot;outYear&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">daysInJail =</span> ((<span class="fu">as.integer</span>(outYear)<span class="sc">*</span><span class="dv">365</span>)<span class="sc">+</span>(<span class="fu">as.integer</span>(outMonth)<span class="sc">*</span><span class="dv">30</span>)<span class="sc">+</span>(<span class="fu">as.integer</span>(outDay)))<span class="sc">-</span>((<span class="fu">as.integer</span>(inYear)<span class="sc">*</span><span class="dv">365</span>)<span class="sc">+</span>(<span class="fu">as.integer</span>(inMonth)<span class="sc">*</span><span class="dv">30</span>)<span class="sc">+</span>(<span class="fu">as.integer</span>(inDay)))</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span><span class="fu">c</span>(name, dob, inDay, inMonth, inYear, outDay, outMonth, outYear, RiskRecidScreeningDate, c_charge_desc)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">crimeType =</span> <span class="fu">str_extract</span>(c_charge_degree,<span class="st">&quot;[MF]&quot;</span>)</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="sc">!</span><span class="fu">is.na</span>(crimeType)</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span><span class="fu">c</span>(daysInJail,juvMisdemeanerCount,juvFelonyCount,juvOtherCount,c_charge_degree,race,sex,RiskViolenceDecileScore,crimeType,ageCat,days_b_screening_arrest,c_days_from_compas,RiskRecidScoreLevel,RiskViolenceScoreLevel))</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>mdf <span class="ot">&lt;-</span> males <span class="sc">%&gt;%</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate</span>(c_jail_in, <span class="fu">c</span>(<span class="st">&quot;inDay&quot;</span>,<span class="st">&quot;inMonth&quot;</span>,<span class="st">&quot;inYear&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate</span>(c_jail_out,<span class="fu">c</span>(<span class="st">&quot;outDay&quot;</span>,<span class="st">&quot;outMonth&quot;</span>,<span class="st">&quot;outYear&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">daysInJail =</span> ((<span class="fu">as.integer</span>(outYear)<span class="sc">*</span><span class="dv">365</span>)<span class="sc">+</span>(<span class="fu">as.integer</span>(outMonth)<span class="sc">*</span><span class="dv">30</span>)<span class="sc">+</span>(<span class="fu">as.integer</span>(outDay)))<span class="sc">-</span>((<span class="fu">as.integer</span>(inYear)<span class="sc">*</span><span class="dv">365</span>)<span class="sc">+</span>(<span class="fu">as.integer</span>(inMonth)<span class="sc">*</span><span class="dv">30</span>)<span class="sc">+</span>(<span class="fu">as.integer</span>(inDay)))</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span><span class="fu">c</span>(name, dob, inDay, inMonth, inYear, outDay, outMonth, outYear, RiskRecidScreeningDate, c_charge_desc)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">crimeType =</span> <span class="fu">str_extract</span>(c_charge_degree,<span class="st">&quot;[MF]&quot;</span>)</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>    <span class="sc">!</span><span class="fu">is.na</span>(crimeType)</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span><span class="fu">c</span>(juvMisdemeanerCount,juvFelonyCount,juvOtherCount,c_charge_degree,race,sex,RiskViolenceDecileScore,crimeType,ageCat,days_b_screening_arrest,c_days_from_compas,RiskRecidScoreLevel,RiskViolenceScoreLevel))</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>fmodel <span class="ot">&lt;-</span> <span class="fu">glm</span>(<span class="at">data=</span>fdf,isRecid<span class="sc">~</span>.,<span class="at">family=</span><span class="st">&quot;binomial&quot;</span>)</span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>mmodel <span class="ot">&lt;-</span> <span class="fu">glm</span>(<span class="at">data=</span>mdf,isRecid<span class="sc">~</span>.,<span class="at">family=</span><span class="st">&quot;binomial&quot;</span>)</span></code></pre></div>
+<div id="model-for-females" class="section level3 tabset">
+<h3 class="tabset">Model for females</h3>
+<div id="simple-2" class="section level4">
+<h4>Simple</h4>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Variable</th>
+<th align="left">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Intercept</td>
+<td align="left">-1.586004</td>
+</tr>
+<tr class="even">
+<td align="left">Age</td>
+<td align="left">-0.0128805</td>
+</tr>
+<tr class="odd">
+<td align="left">Priors</td>
+<td align="left">0.1504766</td>
+</tr>
+<tr class="even">
+<td align="left">Risk Recid Score</td>
+<td align="left">0.1410503</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="full-summary-2" class="section level4">
+<h4>Full Summary</h4>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fmodel)</span></code></pre></div>
+<pre><code>## 
+## Call:
+## glm(formula = isRecid ~ ., family = &quot;binomial&quot;, data = fdf)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.9682  -0.7405  -0.5888   0.3845   2.1546  
+## 
+## Coefficients:
+##                       Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)          -1.586004   0.304116  -5.215 1.84e-07 ***
+## age                  -0.012880   0.007011  -1.837   0.0662 .  
+## priorsCount           0.150477   0.022999   6.543 6.05e-11 ***
+## RiskRecidDecileScore  0.141050   0.029463   4.787 1.69e-06 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 1700.1  on 1499  degrees of freedom
+## Residual deviance: 1539.6  on 1496  degrees of freedom
+## AIC: 1547.6
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+</div>
+<div id="error" class="section level4">
+<h4>Error</h4>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>fmodelPred <span class="ot">&lt;-</span> <span class="fu">predict.glm</span>(fmodel,<span class="at">newdata=</span>fdf,<span class="at">type=</span><span class="st">&quot;response&quot;</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>fDataPred  <span class="ot">&lt;-</span> <span class="fu">cbind</span>(fdf,fmodelPred)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>fDataPred <span class="ot">&lt;-</span> fDataPred <span class="sc">%&gt;%</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">recidPred =</span> <span class="fu">ifelse</span>(fmodelPred <span class="sc">&gt;</span> .<span class="dv">5</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>fmatrix <span class="ot">&lt;-</span> <span class="fu">table</span>(fDataPred<span class="sc">$</span>recidPred,fDataPred<span class="sc">$</span>isRecid)</span></code></pre></div>
+<table>
+<tbody>
+<tr class="odd">
+<td></td>
+<td></td>
+<td>Predicted</td>
+<td>Predicted</td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td>Didn’t Reoffend</td>
+<td>Reoffended</td>
+</tr>
+<tr class="odd">
+<td>Actual</td>
+<td>Didn’t Reoffend</td>
+<td>1076</td>
+<td>321</td>
+</tr>
+<tr class="even">
+<td>Actual</td>
+<td>Reoffended</td>
+<td>43</td>
+<td>60</td>
+</tr>
+</tbody>
+</table>
+<p>Error rate:   0.2426667</p>
+<p>Null hypothesis error:   0.254</p>
+</div>
+<div id="equation" class="section level4">
+<h4>Equation</h4>
+<p>WIP</p>
+</div>
+</div>
+<div id="section-2" class="section level3 unnumbered">
+<h3 class="unnumbered"></h3>
+</div>
+<div id="model-for-males" class="section level3 tabset">
+<h3 class="tabset">Model for males</h3>
+<div id="simple-3" class="section level4">
+<h4>Simple</h4>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Variable</th>
+<th align="left">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Intercept</td>
+<td align="left">-0.0379772</td>
+</tr>
+<tr class="even">
+<td align="left">Age</td>
+<td align="left">-0.0391582</td>
+</tr>
+<tr class="odd">
+<td align="left">Priors</td>
+<td align="left">0.0957135</td>
+</tr>
+<tr class="even">
+<td align="left">Risk Recid Score</td>
+<td align="left">0.1385292</td>
+</tr>
+<tr class="odd">
+<td align="left">Days in Jail</td>
+<td align="left">0.1385292</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="full-summary-3" class="section level4">
+<h4>Full Summary</h4>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mmodel)</span></code></pre></div>
+<pre><code>## 
+## Call:
+## glm(formula = isRecid ~ ., family = &quot;binomial&quot;, data = mdf)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.3346  -0.9422  -0.5995   1.1055   2.5948  
+## 
+## Coefficients:
+##                        Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)          -0.0379772  0.2650427  -0.143   0.8861    
+## age                  -0.0391582  0.0063407  -6.176 6.59e-10 ***
+## priorsCount           0.0957135  0.0149355   6.408 1.47e-10 ***
+## RiskRecidDecileScore  0.1385292  0.0252348   5.490 4.03e-08 ***
+## daysInJail           -0.0027381  0.0007979  -3.432   0.0006 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 1983.8  on 1480  degrees of freedom
+## Residual deviance: 1755.2  on 1476  degrees of freedom
+##   (19 observations deleted due to missingness)
+## AIC: 1765.2
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+</div>
+<div id="error-1" class="section level4">
+<h4>Error</h4>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>mmodelPred <span class="ot">&lt;-</span> <span class="fu">predict.glm</span>(mmodel,<span class="at">newdata=</span>mdf,<span class="at">type=</span><span class="st">&quot;response&quot;</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>mDataPred  <span class="ot">&lt;-</span> <span class="fu">cbind</span>(mdf,mmodelPred)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>mDataPred <span class="ot">&lt;-</span> mDataPred <span class="sc">%&gt;%</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">recidPred =</span> <span class="fu">ifelse</span>(mmodelPred <span class="sc">&gt;</span> .<span class="dv">5</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>mmatrix <span class="ot">&lt;-</span> <span class="fu">table</span>(mDataPred<span class="sc">$</span>recidPred,mDataPred<span class="sc">$</span>isRecid)</span></code></pre></div>
+<table>
+<tbody>
+<tr class="odd">
+<td></td>
+<td></td>
+<td>Predicted</td>
+<td>Predicted</td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td>Didn’t Reoffend</td>
+<td>Reoffended</td>
+</tr>
+<tr class="odd">
+<td>Actual</td>
+<td>Didn’t Reoffend</td>
+<td>750</td>
+<td>320</td>
+</tr>
+<tr class="even">
+<td>Actual</td>
+<td>Reoffended</td>
+<td>150</td>
+<td>261</td>
+</tr>
+</tbody>
+</table>
+<p>Error rate:   0.3133333</p>
+<p>Null hypothesis error:   0.392</p>
+</div>
+<div id="equation-1" class="section level4">
+<h4>Equation</h4>
+<p>WIP</p>
+</div>
+</div>
+<div id="section-3" class="section level3 unnumbered">
+<h3 class="unnumbered"></h3>
+<p>As we can see from the two summaries, there was more variables that had a significant effect on the recidivism for males than for females. This may be because of the smaller population of females making it harder to predict and see trends in the data. Overall we can see that our prediction for males is much more accurate than our prediction for females. This may be due to several factors, but the lack of female data in comparison to male data is most likely the leading contributer of this descrepency.</p>
+</div>
 </div>
 
 
