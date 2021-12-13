@@ -23,7 +23,7 @@ Not only will we be creating models on our data set to predict recidivity, we wi
 
 # Data Cleaning
 
-The data set we were given is exceptionally messy. There are multiple fields that are not useful (date of birth being one) and others that are inusable in their current state (jail in, jail out). The first thing we did was turn jail in and jail out from dates into one column that calculated total days spent in jail. Then we get rid of name and dob. After that we got rid of other variables based upon our needs for the specific models we were created.
+The data set we were given is exceptionally messy. There are multiple fields that are not useful (date of birth being one) and others that are inusable in their current state (jail in, jail out). The first thing we did was turn jail in and jail out from dates into one column that calculated total days spent in jail. Then we get rid of name and dob. After that we got rid of other variables based upon our needs for the specific models we created.
 
 # Logistic Regression of Recidivism Data
 
@@ -153,8 +153,9 @@ $$
 $$
 
 #### Equation
-<!-- equation here -->
-
+$$
+\textrm{recidivation odds} = e^{0.274}\cdot e^{0.473_{sex=Male}}\cdot e^{-0.037_{age}}\cdot e^{-.0028_{daysInJail}}\cdot e^{0.371ln(priors)}
+$$
 
 ### {-}
 
@@ -162,7 +163,7 @@ $$
 
 Above is a summary of the logistic model created to predict whether or not a convict will recidivate. If we check the full summery tab we can see that all of our variables are statistically significant. 
 
-<!-- Johnny can you explain the equation here-->
+Our equation will give us the odds of a criminal recidivating. The variable constants may seem small but they are exponents, any small change to them will change the odds by no small factor.
 
 The error tab above shows our confusion matrix for our logistic model. The first row is the actual number of convicts who didn't recidivate who were predicted to either recidivate or not recidivate. For example, the top left of the matrix is the number of actual convicts who did not recidivate who were predicted to not recidivate, and the top right is the number of convicts who didn't recidivate who were predicted to recidivate. The bottom row is similar except its the number of people who did recidvate and the number of convicts who were predicited to either not recidivate or predicited to recidivate. From this matrix we can calculate our error rate. Error rate is defined as the number of people who didn't recidivate who were predicted to recidivate plus the number of people who did recidivate who were predicted to not recidivate dived by the total number of observations. The mathematical definition is 
 
@@ -211,16 +212,26 @@ summary(modelWS)
 |Actual|Didn't Reoffend|`r WSmatrix[1]`|`r WSmatrix[3]`|
 |Actual|Reoffended|`r WSmatrix[2]`|`r WSmatrix[4]`|
 
+$$
+\textrm{Error Rate} = 0.2926463
+$$
+
 #### Equation
-<!-- equation here  -->
+$$
+\textrm {Recidivation odds} = e^{-1.043}\cdot e^{0.508_{sex=male}}\cdot e^{-0.02_{age}}\cdot e^{0.164_{RiskRecidDecileScore}}\cdot e^{-0.004_{daysInJail}}\cdot e^{0.261_{ln(priors)}}
+$$
 
 ### {-}
 
 **---------------------------------------------------------------------------**
 
-Above is a summary of the logistic model created to predict whether or not a convict will recidivate. If we check the full summery tab we can see that all of our variables are statistically significant. We also have the error tab ----
+Above is a summary of the logistic model created to predict whether or not a convict will recidivate. If we check the full summery tab we can see that all of our variables are statistically significant. We also have the error tab and the equation tab.
 
-<!-- Johnny explain equation here because I can't -->
+Our model is better with the RiskRecidDecileScore, meaning that the test the criminals were given to predict recidivation rates was helpful in constructing a predictive model.
+
+### Summerizing our logistic regression models
+
+The null model for our recidivism prediction would be to take our data and find whatever category was most common for recidivation (in this case it is most common to not recidivate) and simply predict that every criminal won't recidivate. This would give us an error of $0.3482$ meaning that 34% of criminals that we predicted would not recidivate did revidivate. Both of our models had an error rate of about 29%, meaning that our models were about 5% better than just guessing. This isn't ideal, but it is better. However, we find it unsatisfactory when considering that a model like this, if put into use, could effect the outcome of a criminal's ability to receive parole. We wouldn't be comfortable using any model with something so important and sensetive unless we had a lower error rate.
 
 # Multiple Regression Models
 
@@ -250,16 +261,20 @@ summary(bestModel)
 ```
 
 #### Error
-<!-- error -->
+$$
+\textrm {RMSE} = 2.151787
+$$
 
 #### Equation
-<!-- equation -->
+$$
+  \textrm {Risk Recid Decile Score} = 7.371 - 0.099_{age} - 1.165_{race=hispanic} - 1.317_{race=other} - 0.83_{race=white} + 0.337_{juvFelonyCount} + 0.279_{juvOtherCount} + 0.272_{priors}
+$$
 
 ### {-}
 
 **---------------------------------------------------------------------------**
 
-<!-- explanation for model -->
+Above is our model for predicting the Risk Recidivism Score for a criminal. It is interesting to not that while race wasn't significant enough to include it as a factor for our previous logistic models, it is a significant factor here. For example, if the criminal's race is hispanic, the model will take .77 off of their score making them less of a recidivation risk. This means that it could be that whatever test the criminals took adjusted their score based upon race somehow. That seems unlikely, as most tests wouldn't outright ask for a criminal's race, but perhaps the answers to some of it's questions are good predictors of race.
 
 ### Model for Predicting Violence Risk {.tabset}
 
@@ -291,12 +306,20 @@ summary(byron)
 
 
 #### Error
+$$
+\textrm {RMSE} = 1.828036
+$$
 
 #### Equation
+$$
+\textrm {Risk Violence Decile Score} = 7.223 + 0.471_{sex=male} - 0.119_{age} - 0.772_{race=hispanic}-0.855_{race=other}-0.650_{race=white}+0.370_{juvFelonyCount}+0.139_{juvMisdemeanerCount}+0.315_{juvOtherCount}+0.123_{priors}
+$$
 
 ### {-}
 
 **---------------------------------------------------------------------------**
+
+Our RMSE is better for predicting violence than it is for predicting recidivism. Our recidivation model doesn't account for gender which is probably a good indication of violence in our violence model. This probably means that whatever test the criminals take accounts for male's being more prone to violence. If a criminal is a male in our model, it adds .47 points to their violence score. Interestingly, the score starts out pretty high (7.222 according to the intercept) and is subtracted from only on account of age and race. A criminal will have a low violence score if they are an elderly woman of a race other than hispanic, black, or white.
 
 # Classification models for two subpopulations.
 
@@ -383,11 +406,16 @@ Error rate: &emsp; `r ((fmatrix[1,2]+fmatrix[2,1])/count(fdf))`
 Null hypothesis error: &emsp; `r (table(fdf$isRecid)[2]/count(fdf))`
 
 #### Equation
-WIP
+
+$$
+\textrm {Odds of Recidivation} = e^{-1.586}\cdot e^{-0.013_{age}}\cdot e^{0.150_{priors}}\cdot e^{0.141_{RiskRecidDecileScore}}
+$$
 
 ### {-}
 
 **---------------------------------------------------------------------------**
+
+Above we have our model for predicting recidivism in females. The model isn't very good, considering how it is only about .01 or 1% better than our null hypothesis. 
 
 ### Model for males {.tabset}
 
@@ -432,13 +460,16 @@ Error rate: &emsp; `r ((mmatrix[1,2]+mmatrix[2,1])/count(mdf))`
 Null hypothesis error: &emsp; `r (table(mdf$isRecid)[2]/count(mdf))`
 
 #### Equation
-WIP
+
+$$
+\textrm {Odds of Recidivation} = e^{-0.038}\cdot e^{-0.039_{age}}\cdot e^{0.096_{priors}}\cdot e^{0.139_{RiskRecidDecileScore}}\cdot e^{-0.003_{daysInJail}}
+$$
 
 ### {-}
 
 **---------------------------------------------------------------------------**
 
-As we can see from the two summaries, there was more variables that had a significant effect on the recidivism for males than for females. This may be because of the smaller population of females making it harder to predict and see trends in the data. Overall we can see that our prediction for males is much more accurate than our prediction for females. This may be due to several factors, but the lack of female data in comparison to male data is most likely the leading contributer of this descrepency.
+We can see that for males the days spent in jail is a significant factor where for females it was not. Our prediction for males is much better as well, with a null hypothesis of 0.39 and our model's error being 0.31. This could be for a variety of reasons, perhaps it is simply more difficult to model the behavior of female criminals. We can see that for men age is a heavier variable, being -0.039 for men and -0.013 for women. The variables for females might be heavier just because there are less to try and predict female recidivation. 
 
 # Another story about criminal justice
 
@@ -508,3 +539,7 @@ At first glance that might be a pretty poor factor to include in a model. Howeve
 # Works Cited
 
 https://read.oecd-ilibrary.org/education/how-student-s-month-of-birth-is-linked-to-performance-at-school_822ea6ce-en#page20
+
+https://www.propublica.org/article/machine-bias-risk-assessments-in-criminal-sentencing
+
+https://criminal-justice.iresearchnet.com/crime/education-and-crime/4/

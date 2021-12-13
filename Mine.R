@@ -129,7 +129,15 @@ predictions <- predictions %>%
 
 bestModel <- lm(RiskRecidDecileScore ~ age + race + juvFelonyCount + juvOtherCount + priorsCount, data=Originaldata)
 
+bmPredictions <- as.data.frame(predict.lm(bestModel,newdata=Originaldata))
+
+summary(bestModel)
+
+RMSE(bestModel$fitted.values,Originaldata$RiskRecidDecileScore)
+
 recidDecile <- as.data.frame(predict.lm(bestModel,newdata=mystery))
+
+
 
 RMSE <- function(predict, obs) {
   RMSE <-sqrt(mean((predict-obs)^2, na.rm=T))
@@ -142,12 +150,15 @@ predictions <- predictions %>%
   )
 
 
-#I am gonna kick Johnny
-
+############################
 pleaseGodHelp <- Originaldata %>% 
-  select(!c(c_charge_desc,name,dob,RiskRecidScreeningDate,c_jail_in,c_jail_out,RiskViolenceScoreLevel, isRecid, ageCat, RiskRecidScoreLevel, RiskRecidDecileScore, RiskViolenceScoreLevel, c_days_from_compas, days_b_screening_arrest))
+  select(!c(c_charge_degree,c_charge_desc,name,dob,RiskRecidScreeningDate,c_jail_in,c_jail_out,RiskViolenceScoreLevel, isRecid, ageCat, RiskRecidScoreLevel, RiskRecidDecileScore, RiskViolenceScoreLevel, c_days_from_compas, days_b_screening_arrest))
 
 byron <- lm(RiskViolenceDecileScore ~ ., pleaseGodHelp)
+
+RMSE(byron$fitted.values,Originaldata$RiskViolenceDecileScore)
+
+summary(byron)
 
 chocolateChipIceCream <- ols_step_forward_p(byron)
 chocolateChipIceCream
@@ -171,13 +182,6 @@ predictions <- predictions %>%
 write.csv(predictions,"Bushnell_Carstens_Predictions.csv")
 
 #
-
-
-
-
-
-
-
 
 
 
@@ -329,14 +333,19 @@ extraData <- Originaldata %>%
 
 
 ggplot(data=extraData,aes(x=birthSign, fill=as.factor(isRecid))) +
-  geom_bar(position="dodge")
+  geom_bar(position="dodge") +
+  labs(title="Count of Birthsign and Reoffended",x="Birth Sign",y="Count",fill="Reoffended") +
+  theme(axis.text.x=element_text(angle =- 20,hjust=-.1))
 
-ggplot(data=extraData,aes(x=birthSign,y=RiskViolenceDecileScore,fill=as.factor(isRecid))) +
-  geom_col()
+ggplot(data=extraData,aes(x=birthSign,y=juvFelonyCount+juvMisdemeanerCount,fill=as.factor(isRecid)))+
+  geom_col() +
+  labs(fill="Reoffended", title="Juvenile Felony+Misdemeaner Count vs. Birth Sign", x="Birth Sign", y="Juvenile Felony+Misdemeaner Count") +
+  theme(axis.text.x=element_text(angle =- 20,hjust=-.1))
 
-ggplot(data=extraData,aes(x=birthSign,y=juvFelonyCount,fill=as.factor(isRecid)))+
-  geom_col()
 
+
+modelWhat <- lm(data=extraData,juvFelonyCount~.)
+summary(modelWhat)
 
 
 modelSign <- glm(data=extraData,isRecid~.,family="binomial")
@@ -380,6 +389,7 @@ ggplot(data=data,aes(x=c_charge_degree,fill=as.factor(isRecid))) +
   geom_bar(position="dodge") +
   labs(title="Charge Degree and Reoffended",x="Charge Degree",y="Count",fill="Reoffended")
 
-ggplot(data=data,aes(x=log(daysInJail+.1),fill=as.factor(isRecid))) +
-  geom_density(alpha=.3)
+ggplot(data=data,aes(x=daysInJail,fill=as.factor(isRecid))) +
+  geom_density(alpha=.3) +
+  xlim(0,25)
 
