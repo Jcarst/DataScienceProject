@@ -17,9 +17,13 @@ knitr::opts_chunk$set(echo = TRUE, eval=TRUE, message=FALSE, warning=FALSE)
 
 
 # Introduction
-For this project, we are analyzing a criminal justice data set to accurately model and predict recidivism (the likelihood a criminal will reoffend). The data set we are using for these models is from Broward County, Florida and also contains recidivity risk and violence risk scores from a tests that the criminals were given. We will build a model with and a model without those scores to determine how helpful the tests really are in predicting recidivity. 
+For this project, we are analyzing a criminal justice data set to accurately model and predict recidivism (the likelihood a criminal will reoffend). The data set we are using for these models is from Broward County, Florida and also contains recidivity risk and violence risk scores from a test that the criminals were given. We will build a model with and a model without those scores to determine how helpful the tests really are in predicting recidivity. 
 
-Not only will we be creating models on our data set to predict recidivity, we will also be exploring the implications and morality of using algorithms in the criminal justice system. 
+Not only will we be creating models on our data set to predict recidivity, we will also be exploring the implications and morality of using algorithms in the criminal justice system. We will also be exploring some additional questions aside from recidivism for this data set. 
+
+# Data Cleaning
+
+The data set we were given is exceptionally messy. There are multiple fields that are not useful (date of birth being one) and others that are inusable in their current state (jail in, jail out). The first thing we did was turn jail in and jail out from dates into one column that calculated total days spent in jail. Then we get rid of name and dob. After that we got rid of other variables based upon our needs for the specific models we were created.
 
 # Logistic Regression of Recidivism Data
 
@@ -83,12 +87,13 @@ ggplot(pairs, aes(x=sex, fill = as.factor(isRecid))) + geom_bar(position = "dodg
 Figure 4 is a bar graph of Sex vs Reoffended. First we note that the male category is much larger. This plot also shows that less than a third of females are likely to reoffend while greater than a third of men are likely to reoffend. This information can be useful to our model.
 
 ```{r}
-ggplot(data=data,aes(x=log(daysInJail+.1),fill=as.factor(isRecid))) +
+ggplot(data=data,aes(x=daysInJail,fill=as.factor(isRecid))) +
   geom_density(alpha=.3) +
-  labs(x="Natural Log of Days spent in jail",y="Density",fill="Reoffended",title="Figure 5: Density of days spent in jail")
+  labs(x="Days spent in jail",y="Density",fill="Reoffended",title="Figure 5: Density of days spent in jail") +
+  xlim(0,25)
 ```
 
-Figure 5 is a density plot of the logarithm of days spent in jail colored by those who reoffended and those who did not. The reason we used the logarithm for this plot is because it was difficult to visualize otherwise, we will not be using the logarithm for our model because it proved to reduce the accuracy of our model.
+Figure 5 is a density plot of the logarithm of days spent in jail colored by those who reoffended and those who did not. We can see that those who have only spent one day in jail are much less likely to reoffend than those who have spent more. This is a good indicator that days spent in jail can be used to predict recedivism.
 
 
 # Building Logistic Regession Models for Classification
@@ -116,12 +121,7 @@ modelNS <- glm(data=modelNSdata,isRecid~sex+age+daysInJail+log(priorsCount+.1),f
 summary(modelNS)
 ```
 
-### {-}
-
-Above is a summary of the logistic model created to predict whether or not a convict will recidivate. If we check the full summery tab we can see that all of our variables are statistically significant. 
-
-Johnny explain here because I can't
-
+#### Error
 ```{r matt is being confusing}
 modelNSPred <- predict.glm(modelNS,newdata=data,type="response")
 
@@ -143,7 +143,6 @@ WNSmatrix <- table(dataWNSPred$recidPred,dataWNSPred$isRecid)
 |Actual|Didn't Reoffend|`r WNSmatrix[1]`|`r WNSmatrix[3]`|
 |Actual|Reoffended|`r WNSmatrix[2]`|`r WNSmatrix[4]`|
 
-The output above shows our confusion matrix for our logistic model. The first row is the actual number of convicts who didn't recidivate who were predicted to either recidivate or not recidivate. For example, the top left of the matrix is the number of actual convicts who did not recidivate who were predicted to not recidivate, and the top right is the number of convicts who didn't recidivate who were predicted to recidivate. The bottom row is similar except its the number of people who did recidvate and the number of convicts who were predicited to either not recidivate or predicited to recidivate. From this matrix we can calculate our error rate. Error rate is defined as the number of people who didn't recidivate who were predicted to recidivate plus the number of people who did recidivate who were predicted to not recidivate dived by the total number of observations. The mathematical definition is 
 $$ 
 \textrm{Error Rate} = \frac{CF_{12} + CF_{21}}{n},\textrm{ where i = row, j = column, and n = number of observations.}
 $$ 
@@ -152,12 +151,39 @@ Using our Error Rate formula and plugging in values from our confusion matrix gi
 $$
 \textrm{Error Rate} = 0.2958979	
 $$
+
+#### Equation
+<!-- equation here -->
+
+
+### {-}
+
+**---------------------------------------------------------------------------**
+
+Above is a summary of the logistic model created to predict whether or not a convict will recidivate. If we check the full summery tab we can see that all of our variables are statistically significant. 
+
+<!-- Johnny can you explain the equation here-->
+
+The error tab above shows our confusion matrix for our logistic model. The first row is the actual number of convicts who didn't recidivate who were predicted to either recidivate or not recidivate. For example, the top left of the matrix is the number of actual convicts who did not recidivate who were predicted to not recidivate, and the top right is the number of convicts who didn't recidivate who were predicted to recidivate. The bottom row is similar except its the number of people who did recidvate and the number of convicts who were predicited to either not recidivate or predicited to recidivate. From this matrix we can calculate our error rate. Error rate is defined as the number of people who didn't recidivate who were predicted to recidivate plus the number of people who did recidivate who were predicted to not recidivate dived by the total number of observations. The mathematical definition is 
+
 Our error rate is the percentage of data points that our model got wrong.
 
 Now we will build a model using the recidivism scores that we were given with the data set. This will help determine if the scores are effective or not.
 
 ```{r}
 modelWS <- glm(data=data,isRecid~+sex+age+RiskRecidDecileScore+daysInJail+log(priorsCount+.1),family="binomial")
+
+modelWSPred <- predict.glm(modelWS,newdata=data,type="response")
+
+
+dataWSPred  <- cbind(data,modelWSPred)
+
+dataWSPred <- dataWSPred %>%
+  mutate(
+    recidPred = ifelse(modelWSPred > .5, 1, 0)
+  )
+
+WSmatrix <- table(dataWSPred$recidPred,dataWSPred$isRecid)
 ```
 
 ### Model with scores{.tabset}
@@ -177,15 +203,100 @@ modelWS <- glm(data=data,isRecid~+sex+age+RiskRecidDecileScore+daysInJail+log(pr
 summary(modelWS)
 ```
 
+#### Error
+|||||
+|-|-|-|-|
+|||Predicted|Predicted|
+|||Didn't Reoffend|Reoffended|
+|Actual|Didn't Reoffend|`r WSmatrix[1]`|`r WSmatrix[3]`|
+|Actual|Reoffended|`r WSmatrix[2]`|`r WSmatrix[4]`|
+
+#### Equation
+<!-- equation here  -->
+
 ### {-}
 
-Above is a summary of the logistic model created to predict whether or not a convict will recidivate. If we check the full summery tab we can see that all of our variables are statistically significant.
+**---------------------------------------------------------------------------**
 
-Johnny explain here because I can't
+Above is a summary of the logistic model created to predict whether or not a convict will recidivate. If we check the full summery tab we can see that all of our variables are statistically significant. We also have the error tab ----
+
+<!-- Johnny explain equation here because I can't -->
 
 # Multiple Regression Models
 
-In this section we are trying to predict the scores for recidivism. 
+In this section we are trying to predict the scores for recidivism that the convicts received from their test. These scores range from 1-10 for recidivism risk and violence risk.
+
+### Model for Predicting Recedivism Risk {.tabset}
+
+#### Simple
+```{r}
+bestModel <- lm(RiskRecidDecileScore ~ age + race + juvFelonyCount + juvOtherCount + priorsCount, data=Originaldata)
+```
+
+|Variable|Value|
+|:-|:-|
+|Intercept|`r bestModel[[1]][1]`|
+|Age|`r bestModel[[1]][2]`|
+|Race=Hispanic|`r bestModel[[1]][3]`|
+|Race=Other|`r bestModel[[1]][4]`|
+|Race=White|`r bestModel[[1]][5]`|
+|Juvenile Felony Count|`r bestModel[[1]][6]`|
+|Juvenile Other Count|`r bestModel[[1]][7]`|
+|Priors Count|`r bestModel[[1]][8]`|
+
+#### Full Summery
+```{r}
+summary(bestModel)
+```
+
+#### Error
+<!-- error -->
+
+#### Equation
+<!-- equation -->
+
+### {-}
+
+**---------------------------------------------------------------------------**
+
+<!-- explanation for model -->
+
+### Model for Predicting Violence Risk {.tabset}
+
+#### Simple
+```{r}
+pleaseGodHelp <- Originaldata %>% 
+  select(!c(c_charge_degree,c_charge_desc,name,dob,RiskRecidScreeningDate,c_jail_in,c_jail_out,RiskViolenceScoreLevel, isRecid, ageCat, RiskRecidScoreLevel, RiskRecidDecileScore, RiskViolenceScoreLevel, c_days_from_compas, days_b_screening_arrest))
+
+byron <- lm(RiskViolenceDecileScore ~ ., pleaseGodHelp)
+```
+
+|Variable|Value|
+|:-|:-|
+|Intercept|`r byron[[1]][1]`|
+|Sex=Male|`r byron[[1]][2]`|
+|Age|`r byron[[1]][3]`|
+|Race=Hispanic|`r byron[[1]][4]`|
+|Race=Other|`r byron[[1]][5]`|
+|Race=White|`r byron[[1]][6]`|
+|Juvenile Felony Count|`r byron[[1]][7]`|
+|Juvenile Misdemeaner Count|`r byron[[1]][8]`|
+|Juvenile Other Count|`r byron[[1]][9]`|
+|Priors Count|`r byron[[1]][10]`|
+
+#### Full Summery
+```{r}
+summary(byron)
+```
+
+
+#### Error
+
+#### Equation
+
+### {-}
+
+**---------------------------------------------------------------------------**
 
 # Classification models for two subpopulations.
 
@@ -276,6 +387,7 @@ WIP
 
 ### {-}
 
+**---------------------------------------------------------------------------**
 
 ### Model for males {.tabset}
 
@@ -324,7 +436,7 @@ WIP
 
 ### {-}
 
-
+**---------------------------------------------------------------------------**
 
 As we can see from the two summaries, there was more variables that had a significant effect on the recidivism for males than for females. This may be because of the smaller population of females making it harder to predict and see trends in the data. Overall we can see that our prediction for males is much more accurate than our prediction for females. This may be due to several factors, but the lack of female data in comparison to male data is most likely the leading contributer of this descrepency.
 
@@ -373,4 +485,26 @@ extraData <- Originaldata %>%
   filter(!is.na(birthSign))
 ```
 
-We will also be exploring race in the Broward County data set. We are wondering how much race effects the risk recidiviation score and how the imbalance of race in the database could make a model biased.
+```{r}
+ggplot(data=extraData,aes(x=birthSign, fill=as.factor(isRecid))) +
+  geom_bar(position="dodge") +
+  labs(title="Count of Birthsign and Reoffended",x="Birth Sign",y="Count",fill="Reoffended") +
+  theme(axis.text.x=element_text(angle =- 20,hjust=-.1))
+```
+
+The plot above shows the count of those who reoffended by their birth signs. As one would expect, there isn't any conclusive evidence that any of the birthsigns are more commonly criminal or more likely to recidivate. However, the plot below offers some more interesting insight.
+
+```{r}
+ggplot(data=extraData,aes(x=birthSign,y=juvFelonyCount+juvMisdemeanerCount,fill=as.factor(isRecid)))+
+  geom_col() +
+  labs(fill="Reoffended", title="Juvenile Felony+Misdemeaner Count vs. Birth Sign", x="Birth Sign", y="Juvenile Felony+Misdemeaner Count") +
+  theme(axis.text.x=element_text(angle =- 20,hjust=-.1))
+```
+
+In the plot above we see that saggitarius and taurus are over represented for juvenile felonies and misdemeaners. When we built a model to predict juvenile felonies the P-value for taurus was < .02, meaning it was considered a significant factor for figuring juvenile felonies.
+
+At first glance that might be a pretty poor factor to include in a model. However, there is an OECD study that suggests the month a child is born in has a factor in the success of a child in school. While we can confidently say a child's birth sign doesn't immediately affect their chances of being criminal, what month a child is born in shouldn't be discounted. Education and success in school is related to chances of criminal activity. When we make a model off of human behavior it can be hard to predict what is and isn't significant. On one hand we could have tried to give credit to astrology to predict juvenile felonies. On the other hand we could have completely discredited birth month when it has been proven to have an effect on students. Predicted human behavior can be difficult and the lines between what is ethical and unethical can be blurry. As data scientists we should be careful when we approach a problem that predicts human behavior.
+
+# Works Cited
+
+https://read.oecd-ilibrary.org/education/how-student-s-month-of-birth-is-linked-to-performance-at-school_822ea6ce-en#page20
